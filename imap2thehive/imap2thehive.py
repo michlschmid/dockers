@@ -161,7 +161,10 @@ def mailConnect():
     global log
 
     try:
-        mbox = imaplib.IMAP4_SSL(config['imapHost'], config['imapPort'])
+        if config['imapPort'] == 993:
+            mbox = imaplib.IMAP4_SSL(config['imapHost'], config['imapPort'])
+        else:
+            mbox = imaplib.IMAP4(config['imapHost'], config['imapPort'])
     except:
         typ,val = sys.exc_info()[:2]
         log.error("Cannot connect to IMAP server %s: %s" % (config['imapHost'],str(val)))
