@@ -11,9 +11,9 @@ except:
     sys.exit(1)
 
 
-#
-# Converts an emails contents to according TheHive contents.
-#
+'''
+Converts an emails contents to according TheHive contents.
+'''
 def convertMailToTheHive(
         subjectField,
         body,
@@ -171,6 +171,9 @@ def convertMailToTheHive(
             return False
     return True
 
+'''
+Setup the module
+'''
 def init(configObj, logObj):
     global config
     global log

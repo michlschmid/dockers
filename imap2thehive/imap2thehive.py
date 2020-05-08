@@ -21,9 +21,9 @@ import os,sys
 import tempfile
 import re
 
-import helperIMAP
+import mailFetcher
 
-log = ''
+
 
 __author__     = "Xavier Mertens"
 __license__    = "GPLv3"
@@ -32,8 +32,10 @@ __maintainer__ = "Xavier Mertens"
 __email__      = "xavier@rootshell.be"
 __name__       = "imap2thehive"
 
-# Default configuration 
+log = ''
 args = ''
+
+# Default configuration 
 config = {
     'imapHost'           : '',
     'imapPort'           : 993,
@@ -46,7 +48,7 @@ config = {
     'thehiveApiKey'	 : '',
     'thehiveObservables' : False,
     'thehiveWhitelists'  : None,
-    'mailHandler'        : {},
+    'mailHandlers'       : {},
     'caseTLP'            : '',
     'caseTags'           : ['email'],
     'caseTasks'          : [],
@@ -58,8 +60,12 @@ config = {
     'customObservables'  : {}
 }
 
-whitelists = []
 
+
+'''
+Build "observable whitelists" from the given whitelist file.
+'''
+whitelists = []
 def loadWhitelists(filename):
     '''
     Read regex from the provided file, validate them and populate the list
@@ -89,6 +95,9 @@ def loadWhitelists(filename):
             w.append(l)
     return w
 
+'''
+Load and parse the config from the config file.
+'''
 def loadConfig():
     global args
     global config
@@ -135,7 +144,7 @@ def loadConfig():
     # IMAP Config
     config['imapHost']          = c.get('imap', 'host')
     if c.has_option('imap', 'port'):
-        config['imapPort']          = int(c.get('imap', 'port'))
+        config['imapPort']      = int(c.get('imap', 'port'))
     config['imapUser']          = c.get('imap', 'user')
     config['imapPassword']      = c.get('imap', 'password')
     config['imapFolder']        = c.get('imap', 'folder')
@@ -163,11 +172,21 @@ def loadConfig():
 
     # Custom mail handler config
     mailHandlerKeywords = c.get('mailhandler', 'keywords').split(',')
+    mailHandlerModuleNames = c.get('mailhandler', 'modulenames').split(',')
+    i = 0
     for k in mailHandlerKeywords:
-        config['mailHandler'][ k ] = k
-    log.info('config[mailHandler]: %s' % config['mailHandler'])
+        config['mailHandlers'][ k ] = mailHandlerModuleNames[ i ]
+        i = i + 1
+    log.info('config[mailHandlers]: %s' % config['mailHandlers'])
 
-    # New case config
+    # Case config
+    # Email subject encoding for email to existing case matching:
+    config['subjectCaseIdEncodingCustomPrefix'] = c.get('case', 'subjectCaseIdEncodingCustomPrefix')
+    config['subjectCaseIdEncodingPrefix'] = '\('+config['subjectCaseIdEncodingCustomPrefix']+':#'
+    config['subjectCaseIdEncodingPostfix'] = '\)'
+    config['subjectCaseIdEncodingRegEx'] = config['subjectCaseIdEncodingPrefix']+'\w*'+config['subjectCaseIdEncodingPostfix']
+
+    # Defaults for new cases:
     config['caseTLP']           = c.get('case', 'tlp')
     config['caseTags']          = c.get('case', 'tags').split(',')
     if c.has_option('case', 'tasks'):
@@ -206,6 +225,9 @@ def loadConfig():
     # Validate whitelists
     config['whitelists'] = loadWhitelists(config['thehiveWhitelists'])
 
+'''
+Main application handler.
+'''
 def main():
     global config
     global whitelists
@@ -215,8 +237,10 @@ def main():
 
     # Connect to the IMAP Server, check for new mails and handle them...
     log.info('Processing %s@%s:%d/%s' % (config['imapUser'], config['imapHost'], config['imapPort'], config['imapFolder']))
-    helperIMAP.init( config, log )
-    helperIMAP.readMail( helperIMAP.mailConnect() )
+    mailFetcher.init( config, log )
+    mailFetcher.readMail(
+        mailFetcher.mailConnect()
+    )
     return
 
 if __name__ == 'imap2thehive':

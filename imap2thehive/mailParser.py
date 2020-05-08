@@ -1,10 +1,38 @@
-import re
+import os,sys
+import email
+import email.header
+from email.parser import HeaderParser
 import chardet
+import tempfile
+import re
+import importlib
 
+
+
+'''
+Sanitize filenames
+Source: https://github.com/django/django/blob/master/django/utils/text.py
+'''
+def slugify(s):
+    s = str(s).strip().replace(' ', '_')
+    return re.sub(r'(?u)[^-\w.]', '', s)
+
+'''
+Check if the provided string matches one of the whitelist regexes
+'''
+def isWhitelisted(string):
+    global config
+    found = False
+    for w in config['whitelists']:
+        if re.search(w, string, re.IGNORECASE):
+            found = True
+            break
+    return found
+
+'''
+Search for observables in the mail message buffer and build a list of found data
+'''
 def searchObservables(buffer, observables):
-    '''
-    Search for observables in the buffer and build a list of found data
-    '''
     # Observable types
     # Source: https://github.com/armbues/ioc_parser/blob/master/iocp/data/patterns.ini
     observableTypes = [
@@ -31,6 +59,129 @@ def searchObservables(buffer, observables):
             observables.append({ 'type': o['type'], 'value': match })
     return observables
 
+'''
+Main handler to
+* parse the mail message and its attachments
+* forward the parsed data to a distinct
+  TheHive "mail handler" based on the email
+  subject to create the desired TheHive objects:
+  * Cases
+  * Alerts
+  * etc.
+
+Return 'TRUE' is successfully processed otherwise 'FALSE'
+'''
+def submitTheHive(message):
+    global log
+
+    # Decode email
+    msg = email.message_from_bytes(message)
+    decode = email.header.decode_header(msg['From'])[0]
+    if decode[1] is not None:
+        fromField = decode[0].decode(decode[1])
+    else:
+        fromField = str(decode[0])
+    decode = email.header.decode_header(msg['Subject'])[0]
+    if decode[1] is not None:
+        subjectField = decode[0].decode(decode[1])
+    else:
+        subjectField = str(decode[0])
+    log.info("From: %s Subject: %s" % (fromField, subjectField))
+
+    attachments = []
+    observables = []
+
+    # Extract SMTP headers and search for observables
+    parser = HeaderParser()
+    headers = parser.parsestr(msg.as_string())
+    headers_string = ''
+    i = 0
+    while  i < len(headers.keys()):
+        headers_string = headers_string + headers.keys()[i] + ': ' + headers.values()[i] + '\n'
+        i+=1
+    # Temporary disabled
+    # observables = searchObservables(headers_string, observables)
+
+    body = ''
+    for part in msg.walk():
+        if part.get_content_type() == "text/plain":
+            try:
+                body = part.get_payload(decode=True).decode()
+            except UnicodeDecodeError:
+                body = part.get_payload(decode=True).decode('ISO-8859-1')
+            observables.extend( searchObservables(body, observables) )
+        elif part.get_content_type() == "text/html":
+            try:
+                html = part.get_payload(decode=True).decode()
+            except UnicodeDecodeError:
+                html = part.get_payload(decode=True).decode('ISO-8859-1')
+            observables.extend( searchObservables(html, observables) )
+        else:
+            # Extract MIME parts
+            filename = part.get_filename()
+            mimetype = part.get_content_type()
+            if filename and mimetype:
+                if mimetype in config['caseFiles'] or not config['caseFiles']:
+                    log.info("Found attachment: %s (%s)" % (filename, mimetype))
+                    # Decode the attachment and save it in a temporary file
+                    charset = part.get_content_charset()
+                    if charset is None:
+                        charset = chardet.detect(bytes(part))['encoding']
+                    # Get filename extension to not break TheHive analysers (see Github #11)
+                    fname, fextension = os.path.splitext(filename)
+                    fd, path = tempfile.mkstemp(prefix=slugify(fname) + "_", suffix=fextension)
+                    try:
+                        with os.fdopen(fd, 'w+b') as tmp:
+                            tmp.write(part.get_payload(decode=1))
+                        attachments.append(path)
+                    except OSerror as e:
+                        log.error("Cannot dump attachment to %s: %s" % (path,e.errno))
+                        return False
+
+    # Cleanup observables (remove duplicates)
+    new_observables = []
+    for o in observables:
+        if not {'type': o['type'], 'value': o['value'] } in new_observables:
+            # Is the observable whitelisted?
+            if isWhitelisted(o['value']):
+                log.debug('Skipping whitelisted observable: %s' % o['value'])
+            else:
+                new_observables.append({ 'type': o['type'], 'value': o['value'] })
+                log.debug('Found observable %s: %s' % (o['type'], o['value']))
+        else:
+            log.info('Ignoring duplicate observable: %s' % o['value'])
+    log.info("Removed duplicate observables: %d -> %d" % (len(observables), len(new_observables)))
+    observables = new_observables
+
+    # Apply custom email handling
+    # Search for interesting keywords in subjectField for decision making whether to apply a custom converter workflow:
+    customHandlerFlag = False
+    for key in config['mailHandlers'].keys():
+        log.debug("Searching for mailhandler '%s' in subject:'%s'" % (key, subjectField))
+
+        if (customHandlerFlag == False) and re.search(config['alertKeywords'], subjectField, flags=0):
+            moduleName = config['mailHandlers'][ key ]
+            log.debug("Loading custom mailhandler module '%s'" % moduleName)
+            customHandlerFlag = True
+            mailConverter = importlib.import_module( moduleName )
+
+    # Use "default" handler if no specific handler was found
+    if customHandlerFlag == False:
+        import mailConverterDefault as mailConverter
+
+    # Start handler and convert email to TheHive
+    mailConverter.init( config, log )
+    mailConverter.convertMailToTheHive(
+        subjectField,
+        body,
+        fromField,
+        observables,
+        attachments
+    )
+
+'''
+Setup the module
+'''
 def init(configObj, logObj):
     global config
     global log

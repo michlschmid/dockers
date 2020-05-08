@@ -3,13 +3,12 @@ import imaplib
 import logging
 import logging.config
 import re
-import helperTheHive
+import mailParser
 
+'''
+Connection to mailserver and handle the IMAP connection
+'''
 def mailConnect():
-    '''
-    Connection to mailserver and handle the IMAP connection
-    '''
-
     try:
         if config['imapPort'] == 993:
             mbox = imaplib.IMAP4_SSL(config['imapHost'], config['imapPort'])
@@ -35,11 +34,10 @@ def mailConnect():
 
     return mbox
 
+'''
+Search for any unread email in the specfied import folder and fetches it.
+'''
 def readMail(mbox):
-    '''
-    Search for unread email in the specific folder
-    '''
-
     global log
 
     if not mbox:
@@ -68,7 +66,7 @@ def readMail(mbox):
                 continue
 
         # Try to deliver this message to TheHive as case or observable...
-        if helperTheHive.submitTheHive( message ) == True:
+        if mailParser.submitTheHive( message ) == True:
             # If message successfully processed, flag it as 'Deleted' otherwise restore the 'Unread' status
             if config['imapExpunge']:
                 mbox.store(num, '+FLAGS', '\\Deleted')
@@ -81,10 +79,13 @@ def readMail(mbox):
     mbox.expunge() 
     return newEmails
 
+'''
+Setup the module
+'''
 def init(configObj, logObj):
     global config
     global log
     config = configObj
     log = logObj
 
-    helperTheHive.init(configObj, logObj)
+    mailParser.init(configObj, logObj)
