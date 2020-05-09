@@ -109,7 +109,7 @@ class TheHiveConnector:
         return log
 
     def createTaskLog(self, esTaskId, taskLog):
-        self.log.info('%s.addTaskLog starts', __name__)
+        self.log.info('%s.createTaskLog starts', __name__)
 
         response = self.theHiveApi.create_task_log(esTaskId, taskLog)
 
@@ -126,24 +126,77 @@ class TheHiveConnector:
     CASE OBSERVABLE related
     '''
     def craftCaseObservable(self, **attributes):
-        self.log.info('%s.addFileObservable starts', __name__)
+        self.log.info('%s.craftCaseObservable starts', __name__)
         file_observable = CaseObservable( **attributes )
         return file_observable
 
     def createCaseObservable(self, esCaseId, observable):
+        self.log.info('%s.createCaseObservable starts', __name__)
         response = self.theHiveApi.create_case_observable(
             esCaseId, observable)
 
         if response.status_code == 201:
-            esObservableId = response.json()['id']
+            esObservableId = response.json()
             return esObservableId
         else:
-            self.log.error('File observable upload failed')
+            self.log.error('Case observable creation failed')
             raise ValueError(json.dumps(response.json(), indent=4, sort_keys=True))
 
 
+
     '''
-    SEARCHEs / LOOKUPs
+    ALERT related
+    '''
+    def craftAlert(self, **attributes):
+        self.log.info('%s.craftAlert starts', __name__)
+        alert = Alert( **attributes )
+        return alert
+
+    def createAlert(self, alert):
+        self.log.info('%s.createAlert starts', __name__)
+
+        response = self.theHiveApi.create_alert( alert )
+
+        if response.status_code == 201:
+            return response.json()
+        else:
+            self.log.error('Alert creation failed')
+            raise ValueError(json.dumps(response.json(), indent=4, sort_keys=True))
+
+    def findAlert(self, q):
+        """
+            Search for alerts in TheHive for a given query
+
+            :param q: TheHive query
+            :type q: dict
+
+            :return results: list of dict, each dict describes an alert
+            :rtype results: list
+        """
+        self.log.info('%s.findAlert starts', __name__)
+        response = self.theHiveApi.find_alerts(query=q)
+        if response.status_code == 200:
+            results = response.json()
+            return results
+        else:
+            self.log.error('findAlert failed')
+            raise ValueError(json.dumps(response.json(), indent=4, sort_keys=True))
+
+
+
+    '''
+    ALERT ARTIFACT related
+    '''
+    def craftAlertArtifact(self, **attributes):
+        self.log.info('%s.craftAlertArtifact dataType: %s', __name__, attributes['dataType'])
+        alertArtifact = AlertArtifact( **attributes )
+        #self.log.info('%s.craftAlertArtifact data: %s', __name__, alertArtifact.data)
+        return alertArtifact
+
+
+
+    '''
+    SEARCHes / LOOKUPs
     '''
 
     '''
