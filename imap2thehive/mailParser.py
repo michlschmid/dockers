@@ -103,10 +103,13 @@ def submitTheHive(message):
     # observables = searchObservables(headers_string, observables)
 
     body = ''
+    mdBody = 'Headers:\n```\n'+headers_string+'\n```\n----\n'
+    i = 0
     for part in msg.walk():
-        if part.get_content_type() == "text/plain":
+        if part.get_content_type() == "text/plain" and part.get_content_disposition() != "attachment":
             try:
-                body = part.get_payload(decode=True).decode()
+                body    = body + "\nMessage Part " + str(i) + ":\nContent-Type: " + part.get_content_type() + "\n" + part.get_payload(decode=True).decode()
+                mdBody  = mdBody + "\nMessage Part " + str(i) + ":\nContent-Type: `" + part.get_content_type() + "`:\n```\n" + part.get_payload(decode=True).decode() + "\n```\n"
             except UnicodeDecodeError:
                 body = part.get_payload(decode=True).decode('ISO-8859-1')
             observables.extend( searchObservables(body, observables) )
@@ -137,6 +140,11 @@ def submitTheHive(message):
                     except OSerror as e:
                         log.error("Cannot dump attachment to %s: %s" % (path,e.errno))
                         return False
+                else:
+                    body    = body + "\nFound not allowed attachment '" +filename+ "' of Content-Type: " + mimetype + "\n\n"
+                    mdBody  = mdBody + "\nFound not allowed attachment '" +filename+ "' of Content-Type: `" + mimetype + "`\n\n"
+
+        i = i + 1
 
     # Cleanup observables (remove duplicates)
     new_observables = []
@@ -159,7 +167,7 @@ def submitTheHive(message):
     for key in config['mailHandlers'].keys():
         log.debug("Searching for mailhandler '%s' in subject:'%s'" % (key, subjectField))
 
-        if (customHandlerFlag == False) and re.search(config['alertKeywords'], subjectField, flags=0):
+        if (customHandlerFlag == False) and re.search( key, subjectField, flags=0 ):
             moduleName = config['mailHandlers'][ key ]
             log.debug("Loading custom mailhandler module '%s'" % moduleName)
             customHandlerFlag = True
@@ -174,6 +182,7 @@ def submitTheHive(message):
     mailConverter.convertMailToTheHive(
         subjectField,
         body,
+        mdBody,
         fromField,
         observables,
         attachments
