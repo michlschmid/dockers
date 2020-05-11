@@ -36,11 +36,31 @@ def convertMailToTheHive(
     """
 
     # Check if this email belongs to an existing case...
-    if theHiveConnector.searchCaseBySubject( subject ) != None :
+    esCaseId = theHiveConnector.searchCaseBySubject( subject )
+    if esCaseId != None :
         '''
         UPDATE the existing case
-        @TODO
         '''
+        communicationTaskId = theHiveConnector.getTaskIdByTitle( esCaseId, tasknameCommunication )
+
+        if communicationTaskId != None:
+            pass
+        else:
+            #case already exists but no Communication task found
+            #creating comm task
+            log.debug("No Task named %s found => creating one." % tasknameCommunication)
+            craftedTask = theHiveConnector.craftTask( title=tasknameCommunication )
+            communicationTaskId = theHiveConnector.createTask(esCaseId, craftedTask)
+
+        # Add Email as TaskLog to the Communication task
+        craftedTaskLog = theHiveConnector.craftTaskLog( message=mdBody)
+        taskLogId = theHiveConnector.createTaskLog(communicationTaskId, craftedTaskLog)
+
+        # Add Attachments to TaskLog
+        mailConverterHelper.addAttachmentsToTaskLog( communicationTaskId, attachments )
+
+        # Add Observables to Case
+        mailConverterHelper.addObservablesToCase( esCaseId, observables )
 
     else:
         '''
