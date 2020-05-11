@@ -179,7 +179,7 @@ def submitTheHive(message):
 
     # Start handler and convert email to TheHive
     mailConverter.init( config, log )
-    mailConverter.convertMailToTheHive(
+    return mailConverter.convertMailToTheHive(
         subjectField,
         body,
         mdBody,
