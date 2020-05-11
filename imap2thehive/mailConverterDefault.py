@@ -67,7 +67,7 @@ def convertMailToTheHive(
         to decide if to create an Case OR an Alert.
         '''
         log.debug("Searching for '%s' in '%s'" % (config['alertKeywords'], subject))
-        if re.search(config['alertKeywords'], subject, flags=0):
+        if config['alertKeywords'] == "ALERTS_ONLY" or re.search(config['alertKeywords'], subject, flags=0):
             '''
             CREATE an ALERT
             '''
