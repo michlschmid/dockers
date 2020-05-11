@@ -56,8 +56,8 @@ def readMail(mbox):
 
         """
         @DEV: Ability to "REUSE" TEST-EMAILs over and over and over again... ;-)
+        #mbox.store(num, '-FLAGS', '\\Seen')
         """
-        mbox.store(num, '-FLAGS', '\\Seen')
 
         # Ignore messages matching the spam regex if present
         if len(config['imapSpam']) > 0:
