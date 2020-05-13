@@ -113,7 +113,7 @@ def convertMailToTheHive(
                         title       = subject.replace('[ALERT]', ''),
                         tlp         = int(config['alertTLP']),
                         tags        = tags,
-                        description = body,
+                        description = mdBody,
                         type        = 'email',
                         source      = fromField,
                         sourceRef   = sourceRef,
@@ -155,7 +155,7 @@ def convertMailToTheHive(
                             tlp          = int(config['caseTLP']), 
                             flag         = False,
                             tags         = config['caseTags'],
-                            description  = body,
+                            description  = mdBody,
                             template     = config['caseTemplate'],
                             #@DEV customFields = customFields
                         )
@@ -169,7 +169,7 @@ def convertMailToTheHive(
                             tlp          = int(config['caseTLP']), 
                             flag         = False,
                             tags         = config['caseTags'],
-                            description  = body,
+                            description  = mdBody,
                             tasks        = tasks,
                             #@DEV customFields = customFields
                         )
