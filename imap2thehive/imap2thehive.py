@@ -57,7 +57,10 @@ config = {
     'alertTLP'           : '',
     'alertTags'          : ['email'],
     'alertKeyword'       : '\S*\[ALERT\]\S*',
-    'customObservables'  : {}
+    'customObservables'  : {},
+    'customAttachments'  : {
+        'attachOriginalEmail' : False
+    }
 }
 
 
@@ -196,7 +199,7 @@ def loadConfig():
     if c.has_option('case', 'files'):
         config['caseFiles']     = c.get('case', 'files').split(',')
 
-    # Get custom observables if any
+    # Get custom "observable" options if any
     for o in c.options("custom_observables"):
         # Validate the regex
         config['customObservables'][o] = c.get("custom_observables", o)
@@ -205,6 +208,12 @@ def loadConfig():
         except re.error:
             log.error('Regular expression "%s" is invalid.' % config['customObservables'][o])
             sys.exit(1)
+
+    # Get custom "attachment" options if any
+    if c.has_option('custom_attachments', 'attachOriginalEmail'):
+        value = c.get('custom_attachments', 'attachOriginalEmail')
+        if value == '1' or value == 'true' or value == 'yes':
+            config['customAttachments']['attachOriginalEmail'] = True
 
     # Issue a warning of both tasks & template are defined!
     if len(config['caseTasks']) > 0 and config['caseTemplate'] != '':
