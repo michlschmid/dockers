@@ -146,6 +146,18 @@ def submitTheHive(message):
                     body    = body + "\nFound not allowed attachment '" +filename+ "' of Content-Type: " + mimetype + "\n\n"
                     mdBody  = mdBody + "\nFound not allowed attachment '" +filename+ "' of Content-Type: `" + mimetype + "`\n\n"
 
+        # Add the original email message also as attachment:
+        if config['customAttachments']['attachOriginalEmail']:
+            fd, path = tempfile.mkstemp(prefix="original_email_", suffix=".eml")
+            log.info("Adding original email as '*.eml' attachment...")
+            try:
+                with os.fdopen(fd, 'w+b') as tmp:
+                    tmp.write( message )
+                attachments.append(path)
+            except OSerror as e:
+                log.error("Cannot original email as '*.eml' attachment to %s: %s" % (path,e.errno))
+                return False
+
         i = i + 1
 
     # Cleanup observables (remove duplicates)
