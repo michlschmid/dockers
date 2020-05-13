@@ -249,5 +249,5 @@ class TheHiveConnector:
                 raise ValueError('unknown use case after searching case by description')
 
         except Exception as e:
-            self.log.error('Failed to find case by subject', exc_info=True)
+            self.log.info('Failed to find case by subject', exc_info=True)
             return None
