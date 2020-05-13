@@ -124,7 +124,9 @@ def submitTheHive(message):
             filename = part.get_filename()
             mimetype = part.get_content_type()
             if filename and mimetype:
-                if mimetype in config['caseFiles'] or not config['caseFiles']:
+                if (
+                    mimetype in config['caseFiles'] or not config['caseFiles']
+                ) and not isWhitelisted( filename ):
                     log.info("Found attachment: %s (%s)" % (filename, mimetype))
                     # Decode the attachment and save it in a temporary file
                     charset = part.get_content_charset()
