@@ -6,7 +6,7 @@ import chardet
 import tempfile
 import re
 import importlib
-
+import time
 
 
 '''
@@ -101,6 +101,12 @@ def submitTheHive(message):
         i+=1
     # Temporary disabled
     # observables = searchObservables(headers_string, observables)
+    log.info('headers[Date]: %s', headers['Date'])
+    emailDate = email.utils.mktime_tz( 
+        email.utils.parsedate_tz( headers['Date'] )
+     ) * 1000
+    log.info('date: %s', emailDate)
+    log.info('date from int(time.time()) * 1000: %s', int(time.time()) * 1000)
 
     body = ''
     mdBody = 'Headers:\n```\n'+headers_string+'\n```\n----\n'
@@ -197,6 +203,7 @@ def submitTheHive(message):
         subjectField,
         body,
         mdBody,
+        emailDate,
         fromField,
         observables,
         attachments

@@ -14,6 +14,7 @@ def convertMailToTheHive(
         subject,
         body,
         mdBody,
+        emailDate,
         fromField,
         observables,
         attachments

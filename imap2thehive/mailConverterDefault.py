@@ -13,6 +13,7 @@ def convertMailToTheHive(
         subject,
         body,
         mdBody,
+        emailDate,
         fromField,
         observables,
         attachments
@@ -114,6 +115,7 @@ def convertMailToTheHive(
                         tlp         = int(config['alertTLP']),
                         tags        = tags,
                         description = mdBody,
+                        date        = emailDate,
                         type        = 'email',
                         source      = fromField,
                         sourceRef   = sourceRef,
