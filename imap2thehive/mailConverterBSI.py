@@ -81,10 +81,16 @@ def convertMailToTheHive(
         craftedTasks.append( theHiveConnector.craftTask(title=tasknameCommunication) )
         craftedTasks.append( theHiveConnector.craftTask(title=tasknameInvestigation) )
 
+        # Parse TLP from email subject line
+        parsedTlpString = re.search( "(?<=\[TLP\:)(\w+)", subject, flags=0)[0]
+        log.info('Parsed TLP string from subject: %s', parsedTlpString)        
+        tlp = TheHiveConnector.tlpStringToInt( parsedTlpString )
+        log.info('Converted TLP to TheHive TLP-int: %s', tlp)
+
         # Bring it together as a new Case...
         craftedCase = theHiveConnector.craftCase(
                 title        = subject,
-                tlp          = int(config['caseTLP']), 
+                tlp          = tlp,
                 flag         = False,
                 tags         = config['caseTags'],
                 description  = body,

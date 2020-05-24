@@ -251,3 +251,21 @@ class TheHiveConnector:
         except Exception as e:
             self.log.info('Failed to find case by subject', exc_info=True)
             return None
+        
+    """
+    TheHive "TLP" => integer mapping
+    0: white
+    1: green
+    2: amber
+    3: red
+
+    Source: https://github.com/TheHive-Project/TheHiveDocs/blob/master/api/alert.md
+    """
+    def tlpStringToInt(tlpString):
+        switch = {
+            "white": 0,
+            "green": 1,
+            "amber": 2,
+            "red": 3
+        }
+        return switch.get( str(tlpString).lower(), 2 )
