@@ -32,7 +32,7 @@ def convertMailToTheHive(
     '''
 
     # Check if this email belongs to an existing case...
-    esCaseId = theHiveConnector.searchCaseBySubject( subject )
+    esCaseId = theHiveConnector.searchCaseWithCaseIdInSubject( subject )
     if esCaseId != None :
         '''
         UPDATE the existing case

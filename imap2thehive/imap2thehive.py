@@ -244,11 +244,15 @@ def main():
     # Load and parse config files...
     loadConfig()
 
+    mailFetcher.init( config, log )
+
     # Connect to the IMAP Server, check for new mails and handle them...
     log.info('Processing %s@%s:%d/%s' % (config['imapUser'], config['imapHost'], config['imapPort'], config['imapFolder']))
     mailFetcher.init( config, log )
     mailFetcher.readMail(
         mailFetcher.mailConnect()
+    mailFetcher.readAndProcessEmailsFromMailbox(
+        mailFetcher.connectToMailbox()
     )
     return
 

@@ -204,13 +204,13 @@ class TheHiveConnector:
     given mail subject for an encoded "CaseId"
     via RegEx search.
     '''
-    def searchCaseBySubject(self, subject):
+    def searchCaseWithCaseIdInSubject(self, subject):
         #search case with a specific regex string in 'subject'
         #returns the ES case ID
 
-        self.log.info('searchCaseByDescription starts: %s', __name__)
-        self.log.info('searchCaseByDescription subject: %s', subject)
-        self.log.info('searchCaseByDescription config[subjectCaseIdEncodingRegEx]: %s', self.config['subjectCaseIdEncodingRegEx'])
+        self.log.info('searchCaseWithCaseIdInSubject starts: %s', __name__)
+        self.log.info('searchCaseWithCaseIdInSubject subject: %s', subject)
+        self.log.info('searchCaseWithCaseIdInSubject config[subjectCaseIdEncodingRegEx]: %s', self.config['subjectCaseIdEncodingRegEx'])
 
         try:
             regex = re.compile( self.config['subjectCaseIdEncodingRegEx'], re.IGNORECASE )
@@ -220,7 +220,7 @@ class TheHiveConnector:
             caseId  = regex.findall( subject )[0]
             caseId  = caseId.split("#")[1]
             caseId  = str( caseId )[:-1]
-            self.log.info('searchCaseByDescription caseId: %s', caseId)
+            self.log.info('searchCaseWithCaseIdInSubject caseId: %s', caseId)
 
             query = dict()
             query['_string'] = 'caseId:"{}"'.format(caseId)
@@ -233,23 +233,23 @@ class TheHiveConnector:
                 error['message'] = 'get case failed'
                 error['case_id'] = caseId
                 error['payload'] = response.json()
-                self.log.error('Query to TheHive API did not return 200')
+                self.log.error('searchCaseWithCaseIdInSubject: Query to TheHive API did not return 200')
                 raise ValueError(json.dumps(error, indent=4, sort_keys=True))
 
             if len(response.json()) == 1:
                 #one case matched
                 esCaseId = response.json()[0]['id']
-                self.log.info('searchCaseByDescription found esCaseId: %s', esCaseId)
+                self.log.info('searchCaseWithCaseIdInSubject found esCaseId: %s', esCaseId)
                 return esCaseId
             elif len(response.json()) == 0:
                 #no case matched
                 return None
             else:
                 #unknown use case
-                raise ValueError('unknown use case after searching case by description')
+                raise ValueError('searchCaseWithCaseIdInSubject: unknown use case after searching case by description')
 
         except Exception as e:
-            self.log.info('Failed to find case by subject', exc_info=True)
+            self.log.info('searchCaseWithCaseIdInSubject: Failed to find case by subject', exc_info=True)
             return None
         
     """

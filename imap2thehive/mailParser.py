@@ -71,7 +71,7 @@ Main handler to
 
 Return 'TRUE' is successfully processed otherwise 'FALSE'
 '''
-def submitTheHive(message):
+def submitEmailToTheHive(message):
     global log
 
     # Decode email
