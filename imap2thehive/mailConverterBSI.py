@@ -37,7 +37,7 @@ def convertMailToTheHive(
     """
 
     # Check if this email belongs to an existing case...
-    esCaseId = theHiveConnector.searchCaseBySubject( subject )
+    esCaseId = searchCaseByBsiCswNr( extractBsiCswNrFromString( subject ) )
     if esCaseId != None :
         '''
         UPDATE the existing case
@@ -121,6 +121,44 @@ def convertMailToTheHive(
             return False
 
     return True
+
+
+
+"""
+Tries to extract a BSI CSW number from a given string.
+Usually the string is taken from an email subject line.
+
+Example:
+The following subject line:
+* "WG: [CSW_gelb][TLP:GREEN][UPDATE] 2020-199324-11a3: Schwachstelle in ABB SECURITY System 800xA"
+is converted to the following CSW number string:
+* "2020-199324"
+
+If it finds a match it returns the found CSW number string.
+"""
+def extractBsiCswNrFromString( string ):
+    log.info('extractBsiCswNrFromString got string: %s' % string)
+    parsedString = re.search( "(?<=\]\ )(\w+)-(\w+)-(\w+)", string, flags=0)
+    log.info('extractBsiCswNrFromString got values: %s', ', '.join(parsedString))        
+
+    bsiCswNr = parsedString[0]+"-"+parsedString[1]
+    log.info('extractBsiCswNrFromString built bsiCswNr: %s', bsiCswNr)
+    return bsiCswNr
+
+
+
+"""
+Tries to find an existing Case with the
+given BSI CSW number in its title.
+
+If it finds a match it returns the according
+internal esCaseId.
+"""
+def searchCaseByBsiCswNr( bsiCswNr ):
+    log.info('searchCaseByBsiCswNr got bsiCswNr: %s' % bsiCswNr)
+    return None
+
+
 
 '''
 Setup the module
