@@ -246,14 +246,19 @@ def main():
 
     mailFetcher.init( config, log )
 
+    '''
     # Connect to the IMAP Server, check for new mails and handle them...
     log.info('Processing %s@%s:%d/%s' % (config['imapUser'], config['imapHost'], config['imapPort'], config['imapFolder']))
-    mailFetcher.init( config, log )
-    mailFetcher.readMail(
-        mailFetcher.mailConnect()
     mailFetcher.readAndProcessEmailsFromMailbox(
         mailFetcher.connectToMailbox()
     )
+    '''
+
+    '''
+    # Fetch emails from *.eml files from local "test-emails" folder.
+    '''
+    mailFetcher.readAndProcessEmailsFromTestFolder()
+
     return
 
 if __name__ == 'imap2thehive':

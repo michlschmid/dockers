@@ -85,6 +85,29 @@ def readAndProcessEmailsFromMailbox(mbox):
     return newEmails
 
 '''
+Reads all *.eml email files from the specfied "test email" folder
+ * fetches 
+ * processes
+ * converts
+and forwards them to TheHive.
+'''
+def readAndProcessEmailsFromTestFolder():
+    global log
+
+    path = './test-emails/'
+    listing = os.listdir(path)
+
+    for fle in listing:
+        if str.lower(fle[-3:])=="eml":
+            fle = path + fle
+            log.info("FLE: %s" % fle)
+
+            message = email.message_from_file(open( fle ))
+
+            # Try to deliver this message to TheHive as case or observable...
+            mailParser.submitEmailToTheHive( message.encode() )
+
+'''
 Setup the module
 '''
 def init(configObj, logObj):
