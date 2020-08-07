@@ -53,7 +53,7 @@ class TheHiveConnector:
             createdCase = self.theHiveApi.case(esCaseId)
             return createdCase
         else:
-            self.log.error('Case creation failed')
+            self.log.error('%s.createCase: Case creation failed', __name__)
             raise ValueError(json.dumps(response.json(), indent=4, sort_keys=True))
 
 
@@ -84,7 +84,7 @@ class TheHiveConnector:
             esCreatedTaskId = response.json()['id']
             return esCreatedTaskId
         else:
-            self.log.error('Task creation failed')
+            self.log.error('%s.createTask: Task creation failed', __name__)
             raise ValueError(json.dumps(response.json(), indent=4, sort_keys=True))
 
     def getTaskIdByTitle(self, esCaseId, taskTitle):
@@ -117,7 +117,7 @@ class TheHiveConnector:
             esCreatedTaskLogId = response.json()['id']
             return esCreatedTaskLogId
         else:
-            self.log.error('Task log creation failed')
+            self.log.error('%s.createTaskLog: Task log creation failed', __name__)
             raise ValueError(json.dumps(response.json(), indent=4, sort_keys=True))
 
 
@@ -139,7 +139,7 @@ class TheHiveConnector:
             esObservableId = response.json()
             return esObservableId
         else:
-            self.log.error('Case observable creation failed')
+            self.log.error('%s.createCaseObservable: Case observable creation failed', __name__)
             raise ValueError(json.dumps(response.json(), indent=4, sort_keys=True))
 
 
@@ -160,7 +160,7 @@ class TheHiveConnector:
         if response.status_code == 201:
             return response.json()
         else:
-            self.log.error('Alert creation failed')
+            self.log.error('%s.createAlert: Alert creation failed', __name__)
             raise ValueError(json.dumps(response.json(), indent=4, sort_keys=True))
 
     def findAlert(self, q):
@@ -179,7 +179,7 @@ class TheHiveConnector:
             results = response.json()
             return results
         else:
-            self.log.error('findAlert failed')
+            self.log.error('%s.findAlert failed', __name__)
             raise ValueError(json.dumps(response.json(), indent=4, sort_keys=True))
 
 
@@ -208,9 +208,9 @@ class TheHiveConnector:
         #search case with a specific regex string in 'subject'
         #returns the ES case ID
 
-        self.log.info('searchCaseWithCaseIdInSubject starts: %s', __name__)
-        self.log.info('searchCaseWithCaseIdInSubject subject: %s', subject)
-        self.log.info('searchCaseWithCaseIdInSubject config[subjectCaseIdEncodingRegEx]: %s', self.config['subjectCaseIdEncodingRegEx'])
+        self.log.info('%s.searchCaseWithCaseIdInSubject starts', __name__)
+        self.log.info('%s.searchCaseWithCaseIdInSubject subject: %s' % (__name__, subject))
+        self.log.info('%s.searchCaseWithCaseIdInSubject config[subjectCaseIdEncodingRegEx]: %s' % (__name__, self.config['subjectCaseIdEncodingRegEx']))
 
         try:
             regex = re.compile( self.config['subjectCaseIdEncodingRegEx'], re.IGNORECASE )
@@ -220,7 +220,7 @@ class TheHiveConnector:
             caseId  = regex.findall( subject )[0]
             caseId  = caseId.split("#")[1]
             caseId  = str( caseId )[:-1]
-            self.log.info('searchCaseWithCaseIdInSubject caseId: %s', caseId)
+            self.log.info('%s.searchCaseWithCaseIdInSubject caseId: %s' % (__name__, caseId))
 
             query = dict()
             query['_string'] = 'caseId:"{}"'.format(caseId)
@@ -233,23 +233,23 @@ class TheHiveConnector:
                 error['message'] = 'get case failed'
                 error['case_id'] = caseId
                 error['payload'] = response.json()
-                self.log.error('searchCaseWithCaseIdInSubject: Query to TheHive API did not return 200')
+                self.log.error('%s. searchCaseWithCaseIdInSubject: Query to TheHive API did not return 200' % __name__)
                 raise ValueError(json.dumps(error, indent=4, sort_keys=True))
 
             if len(response.json()) == 1:
                 #one case matched
                 esCaseId = response.json()[0]['id']
-                self.log.info('searchCaseWithCaseIdInSubject found esCaseId: %s', esCaseId)
+                self.log.info('%s.searchCaseWithCaseIdInSubject found esCaseId: %s' % (__name__, esCaseId))
                 return esCaseId
             elif len(response.json()) == 0:
                 #no case matched
                 return None
             else:
                 #unknown use case
-                raise ValueError('searchCaseWithCaseIdInSubject: unknown use case after searching case by description')
+                raise ValueError('%s.searchCaseWithCaseIdInSubject: unknown use case after searching case by description' % __name__)
 
         except Exception as e:
-            self.log.info('searchCaseWithCaseIdInSubject: Failed to find case by subject', exc_info=True)
+            self.log.info('%s.searchCaseWithCaseIdInSubject: Failed to find case by subject' % __name__, exc_info=True)
             return None
         
     """

@@ -79,7 +79,7 @@ def loadWhitelists(filename):
     try:
         lines = [line.rstrip('\n') for line in open(filename)]
     except IOError as e:
-        log.error('Cannot read %s: %s' % (filename, e.strerror))
+        log.error('%s.loadWhitelists()::Cannot read %s: %s' % (__name__, filename, e.strerror))
         sys.exit(1)
 
     i = 1
@@ -92,7 +92,7 @@ def loadWhitelists(filename):
             try:
                 re.compile(l)
             except re.error:
-                log.error('Line %d: Regular expression "%s" is invalid.' % (l, f))
+                log.error('%s.loadWhitelists()::Line %d: Regular expression "%s" is invalid.' % (__name__, l, f))
                 sys.exit(1)
             i += 1
             w.append(l)
@@ -126,14 +126,14 @@ def loadConfig():
         args.verbose = False
 
     if not os.path.isfile(args.configFile):
-        log.error('Configuration file %s is not readable.' % args.configFile)
+        log.error('%s.loadConfig()::Configuration file %s is not readable.' % (__name__, args.configFile))
         sys.exit(1);
 
     try:
         c = configparser.ConfigParser()
         c.read(args.configFile)
     except OSerror as e:
-        log.error('Cannot read config file %s: %s' % (args.configFile, e.errno))
+        log.error('%s.loadConfig()::Cannot read config file %s: %s' % (__name__, args.configFile, e.errno))
         sys.exit(1)
 
     logging.config.fileConfig(args.configFile)
@@ -160,7 +160,7 @@ def loadConfig():
         try:
             re.compile(config['imapSpam'])
         except re.error:
-            log.error('Regular expression "%s" is invalid.' % config['imapSpam'])
+            log.error('%s.loadConfig()::Regular expression "%s" is invalid.' % (__name__, config['imapSpam']))
             sys.exit(1)
 
     # TheHive Config
@@ -180,7 +180,7 @@ def loadConfig():
     for k in mailHandlerKeywords:
         config['mailHandlers'][ k ] = mailHandlerModuleNames[ i ]
         i = i + 1
-    log.info('config[mailHandlers]: %s' % config['mailHandlers'])
+    log.info('%s.loadConfig()::config[mailHandlers]: %s' % (__name__, config['mailHandlers']))
 
     # Case config
     # Email subject encoding for email to existing case matching:
@@ -206,7 +206,7 @@ def loadConfig():
         try:
             re.compile(config['customObservables'][o])
         except re.error:
-            log.error('Regular expression "%s" is invalid.' % config['customObservables'][o])
+            log.error('%s.loadConfig()::Regular expression "%s" is invalid.' % (__name__, config['customObservables'][o]))
             sys.exit(1)
 
     # Get custom "attachment" options if any
@@ -217,7 +217,7 @@ def loadConfig():
 
     # Issue a warning of both tasks & template are defined!
     if len(config['caseTasks']) > 0 and config['caseTemplate'] != '':
-        log.warning('Both case template and tasks are defined. Template (%s) will be used.' % config['caseTemplate'])
+        log.warning('%s.loadConfig()::Both case template and tasks are defined. Template (%s) will be used.' % (__name__, config['caseTemplate']))
 
     # New alert config
     config['alertTLP']          = c.get('alert', 'tlp')
@@ -228,7 +228,7 @@ def loadConfig():
     try:
         re.compile(config['alertKeywords'])
     except re.error:
-        log.error('Regular expression "%s" is invalid.' % config['alertKeywords'])
+        log.error('%s.loadConfig()::Regular expression "%s" is invalid.' % (__name__, config['alertKeywords']))
         sys.exit(1)
 
     # Validate whitelists
@@ -248,7 +248,7 @@ def main():
 
     '''
     # Connect to the IMAP Server, check for new mails and handle them...
-    log.info('Processing %s@%s:%d/%s' % (config['imapUser'], config['imapHost'], config['imapPort'], config['imapFolder']))
+    log.info('%s.main()::Processing %s@%s:%d/%s' % (__name__, config['imapUser'], config['imapHost'], config['imapPort'], config['imapFolder']))
     mailFetcher.readAndProcessEmailsFromMailbox(
         mailFetcher.connectToMailbox()
     )

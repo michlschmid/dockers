@@ -19,6 +19,19 @@ def convertMailToTheHive(
         observables,
         attachments
     ):
+    log.debug("\n\n%s == convertMailToTheHive() parameter dump ==" % __name__)
+    log.debug("%s.convertMailToTheHive()::subject:     %s" % (__name__, subject))
+    log.debug("%s.convertMailToTheHive()::body:        %s" % (__name__, body))
+    log.debug("%s.convertMailToTheHive()::mdBody:      %s" % (__name__, mdBody))
+    log.debug("%s.convertMailToTheHive()::emailDate:   %s" % (__name__, emailDate))
+    log.debug("%s.convertMailToTheHive()::fromField:   %s" % (__name__, fromField))
+    log.debug("%s.convertMailToTheHive()::observables:" % __name__)
+    for i in range(len(observables)):
+        log.debug("{0}.convertMailToTheHive()::observable[{1}][{2}]:    {3}".format(__name__, i, observables[i]['type'], observables[i]['value']) )
+    log.debug("%s.convertMailToTheHive()::attachments:" % __name__)
+    for i in range(len(attachments)):
+        log.debug("{0}.convertMailToTheHive()::attachment[{1}]: {2}".format(__name__, i, attachments[i]) )
+    log.debug("%s == convertMailToTheHive() parameter dump ==\n\n" % __name__)
 
     tasknameCommunication = "Communication"
     tasknameInvestigation = "Investigation"
@@ -49,7 +62,7 @@ def convertMailToTheHive(
         else:
             #case already exists but no Communication task found
             #creating comm task
-            log.debug("No Task named %s found => creating one." % tasknameCommunication)
+            log.debug("%s.convertMailToTheHive()::No Task named %s found => creating one." % (__name__, tasknameCommunication))
             craftedTask = theHiveConnector.craftTask( title=tasknameCommunication )
             communicationTaskId = theHiveConnector.createTask(esCaseId, craftedTask)
 
@@ -83,9 +96,9 @@ def convertMailToTheHive(
 
         # Parse TLP from email subject line
         parsedTlpString = re.search( "(?<=\[TLP\:)(\w+)", subject, flags=0)[0]
-        log.info('Parsed TLP string from subject: %s', parsedTlpString)        
+        log.info('%s.convertMailToTheHive()::Parsed TLP string from subject: %s' % (__name__, parsedTlpString))        
         tlp = TheHiveConnector.tlpStringToInt( parsedTlpString )
-        log.info('Converted TLP to TheHive TLP-int: %s', tlp)
+        log.info('%s.convertMailToTheHive()::Converted TLP to TheHive TLP-int: %s' % (__name__, tlp))
 
         # Bring it together as a new Case...
         craftedCase = theHiveConnector.craftCase(
@@ -102,13 +115,13 @@ def convertMailToTheHive(
         case = theHiveConnector.createCase( craftedCase )
         if case:
             esCaseId = case.id
-            log.info('Created esCaseId %s' % esCaseId)
+            log.info('%s.convertMailToTheHive()::Created esCaseId %s' % (__name__, esCaseId))
             caseId = case.caseId
-            log.info('Created caseId %s' % caseId)
+            log.info('%s.convertMailToTheHive()::Created caseId %s' % (__name__, caseId))
 
             # Get the Communication task's generated id
             communicationTaskId = theHiveConnector.getTaskIdByTitle( esCaseId, tasknameCommunication )
-            log.info('Found communicationTaskId %s' % communicationTaskId)
+            log.info('%s.convertMailToTheHive()::Found communicationTaskId %s' % (__name__, communicationTaskId))
             if communicationTaskId:
                 # Append all "email attachments" as TaskLogs to the Communication task
                 mailConverterHelper.addAttachmentsToTaskLog( communicationTaskId, attachments )
@@ -117,7 +130,7 @@ def convertMailToTheHive(
             mailConverterHelper.addObservablesToCase( esCaseId, observables )
 
         else:
-            log.error('Could not create case.')
+            log.error('%s.convertMailToTheHive()::Could not create case.' % __name__)
             return False
 
     return True
@@ -137,12 +150,12 @@ is converted to the following CSW number string:
 If it finds a match it returns the found CSW number string.
 """
 def extractBsiCswNrFromString( string ):
-    log.info('extractBsiCswNrFromString got string: %s' % string)
+    log.info('%s.extractBsiCswNrFromString()::Got string: "%s"' % (__name__, string))
     parsedString = re.search( "(?<=\]\ )(\w+)-(\w+)-(\w+)", string, flags=0)
-    log.info('extractBsiCswNrFromString got values: %s', ', '.join(parsedString))        
+#    log.info('%s.extractBsiCswNrFromString got values: %s' % (__name__, ', '.join(parsedString)))
 
     bsiCswNr = parsedString[0]+"-"+parsedString[1]
-    log.info('extractBsiCswNrFromString built bsiCswNr: %s', bsiCswNr)
+    log.info('%s.extractBsiCswNrFromString()::Built bsiCswNr: %s' % (__name__, bsiCswNr))
     return bsiCswNr
 
 
@@ -155,7 +168,7 @@ If it finds a match it returns the according
 internal esCaseId.
 """
 def searchCaseByBsiCswNr( bsiCswNr ):
-    log.info('searchCaseByBsiCswNr got bsiCswNr: %s' % bsiCswNr)
+    log.info('%s.searchCaseByBsiCswNr()::Got bsiCswNr: %s' % (__name__, bsiCswNr))
     return None
 
 

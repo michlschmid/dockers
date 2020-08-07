@@ -17,7 +17,7 @@ def connectToMailbox():
             mbox = imaplib.IMAP4(config['imapHost'], config['imapPort'])
     except:
         typ,val = sys.exc_info()[:2]
-        log.error("Cannot connect to IMAP server %s: %s" % (config['imapHost'],str(val)))
+        log.error("%s.connectToMailbox()::Cannot connect to IMAP server %s: %s" % (__name__, config['imapHost'],str(val)))
         mbox = None
         return
 
@@ -27,11 +27,11 @@ def connectToMailbox():
         typ,dat = sys.exc_info()[:2]
 
     if typ != 'OK':
-        log.error("Cannot open %s for %s@%s: %s" % (config['imapFolder'], config['imapUser'], config['imapHost'], str(dat)))
+        log.error("%s.connectToMailbox()::Cannot open %s for %s@%s: %s" % (__name__, config['imapFolder'], config['imapUser'], config['imapHost'], str(dat)))
         mbox = None
         return
 
-    log.info('Connected to IMAP server.')
+    log.info('%s.connectToMailbox()::Connected to IMAP server.' % __name__)
 
     return mbox
 
@@ -52,8 +52,10 @@ def readAndProcessEmailsFromMailbox(mbox):
     # debug typ, dat = mbox.search(None, '(ALL)')
     typ, dat = mbox.search(None, '(UNSEEN)')
     newEmails = len(dat[0].split())
-    log.info("%d unread messages to process" % newEmails)
+    log.info("%s.readAndProcessEmailsFromMailbox()::Found '%d' unread messages to process" % (__name__, newEmails))
     for num in dat[0].split():
+        log.info("\n\n%s.readAndProcessEmailsFromMailbox()::Processing message '%d'..." % (__name__, int(num)))
+
         typ, dat = mbox.fetch(num, '(RFC822)')
         if typ != 'OK':
             error(dat[-1])
@@ -67,20 +69,22 @@ def readAndProcessEmailsFromMailbox(mbox):
         # Ignore messages matching the spam regex if present
         if len(config['imapSpam']) > 0:
             if re.match(config['imapSpam'], message.decode('utf-8'), flags=0):
-                log.info("Message %d flagged as spam and skipped" % int(num))
+                log.info("%s.readAndProcessEmailsFromMailbox()::Message '%d' flagged as spam and skipped" % (__name__, int(num)))
                 continue
 
         # Try to deliver this message to TheHive as case or observable...
-        if mailParser.submitEmailToTheHive( message ) == True:
+        messageObj = email.message_from_bytes(message)
+
+        if mailParser.submitEmailToTheHive( messageObj ) == True:
             # If message successfully processed, flag it as 'Deleted' otherwise restore the 'Unread' status
             if config['imapExpunge']:
                 mbox.store(num, '+FLAGS', '\\Deleted')
-                log.info("Message %d successfully processed and deleted" % int(num))
+                log.info("%s.readAndProcessEmailsFromMailbox()::Message '%d' successfully processed and deleted" % (__name__, int(num)))
             else:
-                log.info("Message %d successfully processed and flagged as read" % int(num))
+                log.info("%s.readAndProcessEmailsFromMailbox()::Message '%d' successfully processed and flagged as read" % (__name__, int(num)))
         else:
             mbox.store(num, '-FLAGS', '\\Seen')
-            log.warning("Message %d not processed and flagged as unread" % int(num))
+            log.warning("%s.readAndProcessEmailsFromMailbox()::Message '%d' not processed and flagged as unread" % (__name__, int(num)))
     mbox.expunge() 
     return newEmails
 
@@ -97,15 +101,18 @@ def readAndProcessEmailsFromTestFolder():
     path = './test-emails/'
     listing = os.listdir(path)
 
+    i = 0
     for fle in listing:
+        log.info("\n\n%s.readAndProcessEmailsFromTestFolder()::Processing message '%d'..." % (__name__, int(i)))
         if str.lower(fle[-3:])=="eml":
             fle = path + fle
-            log.info("FLE: %s" % fle)
+            log.info("%s.readAndProcessEmailsFromTestFolder()::FLE: %s" % (__name__, fle))
 
-            message = email.message_from_file(open( fle ))
+            messageObj = email.message_from_file(open( fle ))
 
             # Try to deliver this message to TheHive as case or observable...
-            mailParser.submitEmailToTheHive( message.encode() )
+            mailParser.submitEmailToTheHive( messageObj )
+        i = i + 1
 
 '''
 Setup the module

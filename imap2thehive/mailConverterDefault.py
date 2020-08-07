@@ -19,6 +19,20 @@ def convertMailToTheHive(
         attachments
     ):
 
+    log.debug("\n\n%s == convertMailToTheHive() parameter dump ==" % __name__)
+    log.debug("%s.convertMailToTheHive()::subject:     %s" % (__name__, subject))
+    log.debug("%s.convertMailToTheHive()::body:        %s" % (__name__, body))
+    log.debug("%s.convertMailToTheHive()::mdBody:      %s" % (__name__, mdBody))
+    log.debug("%s.convertMailToTheHive()::emailDate:   %s" % (__name__, emailDate))
+    log.debug("%s.convertMailToTheHive()::fromField:   %s" % (__name__, fromField))
+    log.debug("%s.convertMailToTheHive()::observables:" % __name__)
+    for i in range(len(observables)):
+        log.debug("{0}.convertMailToTheHive()::observable[{1}][{2}]:    {3}".format(__name__, i, observables[i]['type'], observables[i]['value']) )
+    log.debug("%s.convertMailToTheHive()::attachments:" % __name__)
+    for i in range(len(attachments)):
+        log.debug("{0}.convertMailToTheHive()::attachment[{1}]: {2}".format(__name__, i, attachments[i]) )
+    log.debug("%s == convertMailToTheHive() parameter dump ==\n\n" % __name__)
+
     tasknameCommunication = "Communication"
 
     '''
@@ -44,7 +58,7 @@ def convertMailToTheHive(
         else:
             #case already exists but no Communication task found
             #creating comm task
-            log.debug("No Task named %s found => creating one." % tasknameCommunication)
+            log.debug("%s.convertMailToTheHive()::No 'communication-task' named %s found => creating one." % (__name__, tasknameCommunication))
             craftedTask = theHiveConnector.craftTask( title=tasknameCommunication )
             communicationTaskId = theHiveConnector.createTask(esCaseId, craftedTask)
 
@@ -67,7 +81,7 @@ def convertMailToTheHive(
         Search for interesting keywords in the email subject
         to decide if to create an Case OR an Alert.
         '''
-        log.debug("Searching for '%s' in '%s'" % (config['alertKeywords'], subject))
+        log.debug("%s.convertMailToTheHive()::Searching for '%s' in '%s'" % (__name__, config['alertKeywords'], subject))
         if config['alertKeywords'] == "ALERTS_ONLY" or re.search(config['alertKeywords'], subject, flags=0):
             '''
             CREATE an ALERT
@@ -77,7 +91,7 @@ def convertMailToTheHive(
             # Prepare AlertArtifacts from all found observables
             if config['thehiveObservables'] and len(observables) > 0:
                 for o in observables:
-                    log.debug("Adding 'observable' as AlertArtifact '%s'..." % o)
+                    log.debug("%s.convertMailToTheHive()::Adding 'observable' as AlertArtifact '%s'..." % (__name__, o))
                     artifacts.append(
                         theHiveConnector.craftAlertArtifact(
                             dataType=o['type'],
@@ -88,7 +102,7 @@ def convertMailToTheHive(
             # Prepare AlertArtifacts from all found email attachments
             if config['thehiveObservables'] and len(attachments) > 0:
                 for path in attachments:
-                    log.debug("Adding 'attachment' as AlertArtifact '%s'..." % path)
+                    log.debug("%s, convertMailToTheHive()::Adding 'attachment' as AlertArtifact '%s'..." % (__name__, path))
                     artifacts.append(
                         theHiveConnector.craftAlertArtifact(
                         dataType='file',
@@ -131,9 +145,9 @@ def convertMailToTheHive(
                     os.unlink( path )
 
             if alert:
-                log.info('Created alert.' )
+                log.info('%s.convertMailToTheHive()::Created alert.' % __name__)
             else:
-                log.error('Could not create alert.')
+                log.error('%s.convertMailToTheHive()::Could not create alert.' % __name__)
                 return False
 
         else:
@@ -180,9 +194,9 @@ def convertMailToTheHive(
             case = theHiveConnector.createCase( craftedCase )
             if case:
                 esCaseId = case.id
-                log.info('Created esCaseId %s' % esCaseId)
+                log.info('%s.convertMailToTheHive()::Created esCaseId %s' % (__name__, esCaseId))
                 caseId = case.caseId
-                log.info('Created caseId %s' % caseId)
+                log.info('%s.convertMailToTheHive()::Created caseId %s' % (__name__, caseId))
 
                 # Add all mail attachments as observables to the case
                 if len(attachments) > 0:
@@ -196,9 +210,9 @@ def convertMailToTheHive(
                             message = 'Found as email attachment'
                             )
                         if theHiveConnector.createCaseObservable( esCaseId, craftedObservable ):
-                            log.info('Added attachment "%s" as an observable to case ID %s' % (path, esCaseId))
+                            log.info('%s.convertMailToTheHive()::Added attachment "%s" as an observable to case ID %s' % (__name__, path, esCaseId))
                         else:
-                            log.warning('Could not add attachment "%s" as an observable to case ID %s' % (path, esCaseId))
+                            log.warning('%s.convertMailToTheHive()::Could not add attachment "%s" as an observable to case ID %s' % (__name__, path, esCaseId))
 
                         # Delete temp attachment files anyway
                         os.unlink( path )
@@ -215,12 +229,12 @@ def convertMailToTheHive(
                             message  = 'Found in the email body'
                             )
                         if theHiveConnector.createCaseObservable( esCaseId, craftedObservable ):
-                            log.info('Added observable %s: %s to case ID %s' % (o['type'], o['value'], esCaseId))
+                            log.info('%s.convertMailToTheHive()::Added observable %s: %s to case ID %s' % (__name__, o['type'], o['value'], esCaseId))
                         else:
-                            log.warning('Could not add observable %s: %s to case ID %s' % (o['type'], o['value'], esCaseId))
+                            log.warning('%s.convertMailToTheHive()::Could not add observable %s: %s to case ID %s' % (__name__, o['type'], o['value'], esCaseId))
 
             else:
-                log.error('Cannot create case: %s (%s)' % (response.status_code, response.text))
+                log.error('%s.convertMailToTheHive()::Cannot create case: %s (%s)' % (__name__, response.status_code, response.text))
                 return False
 
     return True

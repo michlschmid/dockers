@@ -86,7 +86,7 @@ def submitEmailToTheHive(message):
         subjectField = decode[0].decode(decode[1])
     else:
         subjectField = str(decode[0])
-    log.info("From: %s Subject: %s" % (fromField, subjectField))
+    log.info("%s.submitEmailToTheHive()::From: %s Subject: %s" % (__name__, fromField, subjectField))
 
     attachments = []
     observables = []
@@ -101,12 +101,12 @@ def submitEmailToTheHive(message):
         i+=1
     # Temporary disabled
     # observables = searchObservables(headers_string, observables)
-    log.info('headers[Date]: %s', headers['Date'])
+    log.info('%s.submitEmailToTheHive()::Headers[Date]: %s' % (__name__, headers['Date']))
     emailDate = email.utils.mktime_tz( 
         email.utils.parsedate_tz( headers['Date'] )
-     ) * 1000
-    log.info('date: %s', emailDate)
-    log.info('date from int(time.time()) * 1000: %s', int(time.time()) * 1000)
+    ) * 1000
+    log.debug('%s.submitEmailToTheHive()::Date: %s' % (__name__, emailDate))
+    log.debug('%s.submitEmailToTheHive()::Date from int(time.time()) * 1000: %s' % (__name__, int(time.time()) * 1000))
 
     body = ''
     mdBody = 'Headers:\n```\n'+headers_string+'\n```\n----\n'
@@ -133,7 +133,7 @@ def submitEmailToTheHive(message):
                 if (
                     mimetype in config['caseFiles'] or not config['caseFiles']
                 ) and not isWhitelisted( filename ):
-                    log.info("Found attachment: %s (%s)" % (filename, mimetype))
+                    log.info("%s.submitEmailToTheHive()::Found attachment: %s (%s)" % (__name__, filename, mimetype))
                     # Decode the attachment and save it in a temporary file
                     charset = part.get_content_charset()
                     if charset is None:
@@ -146,7 +146,7 @@ def submitEmailToTheHive(message):
                             tmp.write(part.get_payload(decode=1))
                         attachments.append(path)
                     except OSerror as e:
-                        log.error("Cannot dump attachment to %s: %s" % (path,e.errno))
+                        log.error("%s.submitEmailToTheHive()::Cannot dump attachment to %s: %s" % (__name__, path, e.errno))
                         return False
                 else:
                     body    = body + "\nFound not allowed attachment '" +filename+ "' of Content-Type: " + mimetype + "\n\n"
@@ -172,24 +172,24 @@ def submitEmailToTheHive(message):
         if not {'type': o['type'], 'value': o['value'] } in new_observables:
             # Is the observable whitelisted?
             if isWhitelisted(o['value']):
-                log.debug('Skipping whitelisted observable: %s' % o['value'])
+                log.debug('%s.submitEmailToTheHive()::Skipping whitelisted observable: %s' % (__name__, o['value']))
             else:
                 new_observables.append({ 'type': o['type'], 'value': o['value'] })
-                log.debug('Found observable %s: %s' % (o['type'], o['value']))
+                log.debug('%s.submitEmailToTheHive()::Found observable %s: %s' % (__name__, o['type'], o['value']))
         else:
-            log.info('Ignoring duplicate observable: %s' % o['value'])
-    log.info("Removed duplicate observables: %d -> %d" % (len(observables), len(new_observables)))
+            log.info('%s.submitEmailToTheHive()::Ignoring duplicate observable: %s' % (__name__, o['value']))
+    log.info("%s.submitEmailToTheHive()::Removed duplicate observables: %d -> %d" % (__name__, len(observables), len(new_observables)))
     observables = new_observables
 
     # Apply custom email handling
     # Search for interesting keywords in subjectField for decision making whether to apply a custom converter workflow:
     customHandlerFlag = False
     for key in config['mailHandlers'].keys():
-        log.debug("Searching for mailhandler '%s' in subject:'%s'" % (key, subjectField))
+        log.debug("%s.submitEmailToTheHive()::Searching for mailhandler '%s' in subject:'%s'" % (__name__, key, subjectField))
 
         if (customHandlerFlag == False) and re.search( key, subjectField, flags=0 ):
             moduleName = config['mailHandlers'][ key ]
-            log.debug("Loading custom mailhandler module '%s'" % moduleName)
+            log.debug("%s.submitEmailToTheHive()::Loading custom mailhandler module '%s'" % (__name__, moduleName))
             customHandlerFlag = True
             mailConverter = importlib.import_module( moduleName )
 
