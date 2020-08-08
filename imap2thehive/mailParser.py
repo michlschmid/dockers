@@ -71,17 +71,16 @@ Main handler to
 
 Return 'TRUE' is successfully processed otherwise 'FALSE'
 '''
-def submitEmailToTheHive(message):
+def submitEmailToTheHive(messageObj):
     global log
 
     # Decode email
-    msg = email.message_from_bytes(message)
-    decode = email.header.decode_header(msg['From'])[0]
+    decode = email.header.decode_header(messageObj['From'])[0]
     if decode[1] is not None:
         fromField = decode[0].decode(decode[1])
     else:
         fromField = str(decode[0])
-    decode = email.header.decode_header(msg['Subject'])[0]
+    decode = email.header.decode_header(messageObj['Subject'])[0]
     if decode[1] is not None:
         subjectField = decode[0].decode(decode[1])
     else:
@@ -93,7 +92,7 @@ def submitEmailToTheHive(message):
 
     # Extract SMTP headers and search for observables
     parser = HeaderParser()
-    headers = parser.parsestr(msg.as_string())
+    headers = parser.parsestr(messageObj.as_string())
     headers_string = ''
     i = 0
     while  i < len(headers.keys()):
@@ -111,7 +110,7 @@ def submitEmailToTheHive(message):
     body = ''
     mdBody = 'Headers:\n```\n'+headers_string+'\n```\n----\n'
     i = 0
-    for part in msg.walk():
+    for part in messageObj.walk():
         if part.get_content_type() == "text/plain" and part.get_content_disposition() != "attachment":
             try:
                 body    = body + "\nMessage Part " + str(i) + ":\nContent-Type: " + part.get_content_type() + "\n" + part.get_payload(decode=True).decode()
@@ -152,19 +151,20 @@ def submitEmailToTheHive(message):
                     body    = body + "\nFound not allowed attachment '" +filename+ "' of Content-Type: " + mimetype + "\n\n"
                     mdBody  = mdBody + "\nFound not allowed attachment '" +filename+ "' of Content-Type: `" + mimetype + "`\n\n"
 
-        # Add the original email message also as attachment:
-        if config['customAttachments']['attachOriginalEmail']:
-            fd, path = tempfile.mkstemp(prefix="original_email_", suffix=".eml")
-            log.info("Adding original email as '*.eml' attachment...")
-            try:
-                with os.fdopen(fd, 'w+b') as tmp:
-                    tmp.write( message )
-                attachments.append(path)
-            except OSerror as e:
-                log.error("Cannot original email as '*.eml' attachment to %s: %s" % (path,e.errno))
-                return False
 
         i = i + 1
+
+    # Add the original email message also as attachment:
+    if config['customAttachments']['attachOriginalEmail']:
+        fd, path = tempfile.mkstemp(prefix="original_email_", suffix=".eml")
+        log.info("%s.submitEmailToTheHive()::Adding original email as '*.eml' attachment (tmp path:%s)..." % (__name__, path))
+        try:
+            with os.fdopen(fd, 'w+b') as tmp:
+                tmp.write( messageObj.as_bytes() )
+            attachments.append( path )
+        except OSerror as e:
+            log.error("%s.submitEmailToTheHive()::Cannot original email as '*.eml' attachment to %s: %s" % (__name__, path,e.errno))
+            return False
 
     # Cleanup observables (remove duplicates)
     new_observables = []
