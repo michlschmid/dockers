@@ -114,16 +114,19 @@ def submitEmailToTheHive(messageObj):
         if part.get_content_type() == "text/plain" and part.get_content_disposition() != "attachment":
             try:
                 body    = body + "\nMessage Part " + str(i) + ":\nContent-Type: " + part.get_content_type() + "\n" + part.get_payload(decode=True).decode()
-                mdBody  = mdBody + "\nMessage Part " + str(i) + ":\nContent-Type: `" + part.get_content_type() + "`:\n```\n" + part.get_payload(decode=True).decode() + "\n```\n"
+                mdBody  = mdBody + "\nMessage Part " + str(i) + ":\nContent-Type: `" + part.get_content_type() + "`:\n```\n" + part.get_payload(decode=True).decode() + "\n```"
             except UnicodeDecodeError:
                 body = part.get_payload(decode=True).decode('ISO-8859-1')
+                mdBody = mdBody + "```" + part.get_payload(decode=True).decode('ISO-8859-1') + "```"
             observables.extend( searchObservables(body, observables) )
+
         elif part.get_content_type() == "text/html":
             try:
                 html = part.get_payload(decode=True).decode()
             except UnicodeDecodeError:
                 html = part.get_payload(decode=True).decode('ISO-8859-1')
             observables.extend( searchObservables(html, observables) )
+
         else:
             # Extract MIME parts
             filename = part.get_filename()
@@ -143,14 +146,13 @@ def submitEmailToTheHive(messageObj):
                     try:
                         with os.fdopen(fd, 'w+b') as tmp:
                             tmp.write(part.get_payload(decode=1))
-                        attachments.append(path)
+                        attachments.append( path )
                     except OSerror as e:
                         log.error("%s.submitEmailToTheHive()::Cannot dump attachment to %s: %s" % (__name__, path, e.errno))
                         return False
                 else:
-                    body    = body + "\nFound not allowed attachment '" +filename+ "' of Content-Type: " + mimetype + "\n\n"
-                    mdBody  = mdBody + "\nFound not allowed attachment '" +filename+ "' of Content-Type: `" + mimetype + "`\n\n"
-
+                    body    = body + "\n----\nIMAP-2-THEHIVE NOTICE: Found not allowed attachment '" +filename+ "' of Content-Type: " + mimetype
+                    mdBody  = mdBody + "\n----\nIMAP-2-THEHIVE NOTICE: Found not allowed attachment '" +filename+ "' of Content-Type: `" + mimetype + "`"
 
         i = i + 1
 
