@@ -103,16 +103,21 @@ def readAndProcessEmailsFromTestFolder():
 
     i = 0
     for fle in listing:
-        log.info("\n\n%s.readAndProcessEmailsFromTestFolder()::Processing message '%d'..." % (__name__, int(i)))
+        log.info("\n\n%s.readAndProcessEmailsFromTestFolder()::Processing file '%d'..." % (__name__, int(i)))
         if str.lower(fle[-3:])=="eml":
             fle = path + fle
-            log.info("%s.readAndProcessEmailsFromTestFolder()::FLE: %s" % (__name__, fle))
+            log.info("%s.readAndProcessEmailsFromTestFolder()::Processing FLE: %s as email file..." % (__name__, fle))
 
             messageObj = email.message_from_file(open( fle ))
 
             # Try to deliver this message to TheHive as case or observable...
             mailParser.submitEmailToTheHive( messageObj )
+
+        else:
+            log.info("%s.readAndProcessEmailsFromTestFolder()::Dropping FLE: %s as it doesn't look like an email file." % (__name__, fle))
+
         i = i + 1
+
 
 '''
 Setup the module
