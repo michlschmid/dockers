@@ -266,6 +266,7 @@ def main():
 
     else:
         # Fetch emails from *.eml files from local "test-emails" folder.
+        log.info('%s.main()::Processing !! TEST FILES !!' % (__name__))
         mailFetcher.readAndProcessEmailsFromTestFolder()
 
     return
