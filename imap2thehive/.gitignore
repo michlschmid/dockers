@@ -6,3 +6,4 @@ test-emails/*
 !test-emails/convertMsgToEml.sh
 /*.conf
 /*.whitelists
+/Personal*
