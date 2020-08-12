@@ -173,7 +173,7 @@ def convertMailToTheHive(
                             tags         = config['caseTags'],
                             description  = mdBody,
                             template     = config['caseTemplate'],
-                            #@DEV customFields = customFields
+                            #@TODO customFields = customFields
                         )
             else:
                 # Prepare the Case's "tasks"
@@ -187,7 +187,7 @@ def convertMailToTheHive(
                             tags         = config['caseTags'],
                             description  = mdBody,
                             tasks        = tasks,
-                            #@DEV customFields = customFields
+                            #@TODO customFields = customFields
                         )
 
             # Create the case
