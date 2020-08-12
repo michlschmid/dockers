@@ -108,7 +108,7 @@ def convertMailToTheHive(
                 tags         = config['caseTags'],
                 description  = body,
                 tasks        = craftedTasks,
-                #@DEV customFields = customFields
+                #@TODO customFields = customFields
             )
 
         # ...and now create the Case
