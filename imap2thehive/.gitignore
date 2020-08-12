@@ -2,3 +2,5 @@ venv
 .vscode
 __pycache__
 imap2thehive.log
+test-emails/*
+!test-emails/convertMsgToEml.sh
