@@ -117,6 +117,11 @@ def loadConfig():
         dest = 'configFile',
         help = 'configuration file (default: /etc/imap2thehive.conf)',
         metavar = 'CONFIG')
+    parser.add_argument('-t', '--test',
+        action = 'store_true',
+        dest = 'test',
+        help = 'use "local test emails" (in *.eml format). Files need to be placed in ./test-emails/',
+        default = False)
     args = parser.parse_args()
 
     # Default values
@@ -124,6 +129,8 @@ def loadConfig():
         args.configFile = '/etc/imap2thehive.conf'
     if not args.verbose:
         args.verbose = False
+    if not args.test:
+        args.test = False
 
     if not os.path.isfile(args.configFile):
         log.error('%s.loadConfig()::Configuration file %s is not readable.' % (__name__, args.configFile))
@@ -143,6 +150,10 @@ def loadConfig():
         root_logger.setLevel(logging.DEBUG)
 
     log = logging.getLogger(__name__)
+
+    config['testmode']          = False
+    if args.test == True:
+        config['testmode']      = True
 
     # IMAP Config
     config['imapHost']          = c.get('imap', 'host')
@@ -246,18 +257,16 @@ def main():
 
     mailFetcher.init( config, log )
 
-    '''
-    # Connect to the IMAP Server, check for new mails and handle them...
-    log.info('%s.main()::Processing %s@%s:%d/%s' % (__name__, config['imapUser'], config['imapHost'], config['imapPort'], config['imapFolder']))
-    mailFetcher.readAndProcessEmailsFromMailbox(
-        mailFetcher.connectToMailbox()
-    )
-    '''
+    if config['testmode'] == False:
+        # Connect to the IMAP Server, check for new mails and handle them...
+        log.info('%s.main()::Processing %s@%s:%d/%s' % (__name__, config['imapUser'], config['imapHost'], config['imapPort'], config['imapFolder']))
+        mailFetcher.readAndProcessEmailsFromMailbox(
+            mailFetcher.connectToMailbox()
+        )
 
-    '''
-    # Fetch emails from *.eml files from local "test-emails" folder.
-    '''
-    mailFetcher.readAndProcessEmailsFromTestFolder()
+    else:
+        # Fetch emails from *.eml files from local "test-emails" folder.
+        mailFetcher.readAndProcessEmailsFromTestFolder()
 
     return
 
