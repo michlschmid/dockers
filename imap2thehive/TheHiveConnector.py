@@ -1,14 +1,18 @@
 
 import re
 
+import logging
+
 try:
     from thehive4py.api import TheHiveApi
     from thehive4py.models import Case, CaseTask, CaseTaskLog, CaseObservable
     from thehive4py.models import Alert, AlertArtifact
     from thehive4py.query import Eq
 except:
-    self.log.error("Please install thehive4py.")
+    print("Please install thehive4py.")
     sys.exit(1)
+
+log = logging.getLogger(__name__)
 
 class TheHiveConnector:
     'TheHive connector'
@@ -20,9 +24,9 @@ class TheHiveConnector:
     '''
     Setup the module
     '''
-    def __init__(self, configObj, logObj):
+    def __init__(self, configObj):
         self.config = configObj
-        self.log = logObj
+        self.log = log
 
         self.theHiveApi = self.connect()
 
@@ -217,8 +221,12 @@ class TheHiveConnector:
             # take first regex result
             # get number part (after '#')
             # remove trailing ')'
-            caseId  = regex.findall( subject )[0]
-            caseId  = caseId.split("#")[1]
+            caseId  = regex.findall( subject )
+            if not caseId:
+                #no case matched
+                return None
+
+            caseId  = caseId[0].split("#")[1]
             caseId  = str( caseId )[:-1]
             self.log.info('%s.searchCaseWithCaseIdInSubject caseId: %s' % (__name__, caseId))
 

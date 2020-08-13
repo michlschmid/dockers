@@ -6,6 +6,8 @@ import re
 import mailParser
 import email
 
+log = logging.getLogger(__name__)
+
 '''
 Connection to mailserver and handle the IMAP connection
 '''
@@ -43,8 +45,6 @@ Reads all unread emails from the specfied MAILBOX folder
 and forwards them to TheHive.
 '''
 def readAndProcessEmailsFromMailbox(mbox):
-    global log
-
     if not mbox:
         return
 
@@ -96,19 +96,17 @@ Reads all *.eml email files from the specfied "test email" folder
 and forwards them to TheHive.
 '''
 def readAndProcessEmailsFromTestFolder():
-    global log
-
     path = './test-emails/'
     listing = os.listdir(path)
 
-    i = 0
-    for fle in listing:
+    for i, fle in enumerate(listing):
         log.info("\n\n%s.readAndProcessEmailsFromTestFolder()::Processing file '%d'..." % (__name__, int(i)))
-        if str.lower(fle[-3:])=="eml":
+        if fle.lower().endswith(".eml"):
             fle = path + fle
             log.info("%s.readAndProcessEmailsFromTestFolder()::Processing FLE: %s as email file..." % (__name__, fle))
 
-            messageObj = email.message_from_file(open( fle ))
+            with open( fle, "rb" ) as f:
+                messageObj = email.message_from_string( f.read().decode('ascii', 'ignore') )
 
             # Try to deliver this message to TheHive as case or observable...
             mailParser.submitEmailToTheHive( messageObj )
@@ -116,16 +114,12 @@ def readAndProcessEmailsFromTestFolder():
         else:
             log.info("%s.readAndProcessEmailsFromTestFolder()::Dropping FLE: %s as it doesn't look like an email file." % (__name__, fle))
 
-        i = i + 1
-
 
 '''
 Setup the module
 '''
-def init(configObj, logObj):
+def init(configObj):
     global config
-    global log
     config = configObj
-    log = logObj
 
-    mailParser.init(configObj, logObj)
+    mailParser.init(configObj)

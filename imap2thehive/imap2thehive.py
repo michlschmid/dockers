@@ -10,9 +10,6 @@
 # - Configuration validation
 # - Support for GnuPG
 #
-
-from __future__ import print_function
-from __future__ import unicode_literals
 import logging
 import logging.config
 import argparse
@@ -23,8 +20,6 @@ import re
 
 import mailFetcher
 
-
-
 __author__     = "Xavier Mertens"
 __license__    = "GPLv3"
 __version__    = "1.0.7"
@@ -32,7 +27,8 @@ __maintainer__ = "Xavier Mertens"
 __email__      = "xavier@rootshell.be"
 __name__       = "imap2thehive"
 
-log = ''
+log = logging.getLogger(__name__)
+
 args = ''
 
 # Default configuration 
@@ -104,7 +100,6 @@ Load and parse the config from the config file.
 def loadConfig():
     global args
     global config
-    global log
 
     parser = argparse.ArgumentParser(
         description = 'Process an IMAP folder to create TheHive alerts/cased.')
@@ -255,7 +250,7 @@ def main():
     # Load and parse config files...
     loadConfig()
 
-    mailFetcher.init( config, log )
+    mailFetcher.init( config )
 
     if config['testmode'] == False:
         # Connect to the IMAP Server, check for new mails and handle them...

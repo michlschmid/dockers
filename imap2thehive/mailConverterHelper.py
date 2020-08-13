@@ -1,8 +1,9 @@
 import os
+import logging
 
 from TheHiveConnector import TheHiveConnector
 
-
+log = logging.getLogger(__name__)
 
 def addAttachmentsToTaskLog(
         taskId,
@@ -47,12 +48,10 @@ def addObservablesToCase(
 '''
 Setup the module
 '''
-def init(configObj, logObj):
+def init(configObj):
     global config
-    global log
     global theHiveConnector
 
     config = configObj
-    log = logObj
 
-    theHiveConnector = TheHiveConnector(configObj, logObj)
+    theHiveConnector = TheHiveConnector(configObj)

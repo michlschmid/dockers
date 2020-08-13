@@ -1,11 +1,13 @@
 import os,sys
 import re
 import uuid
+import logging
 
 from TheHiveConnector import TheHiveConnector
+
 import mailConverterHelper
 
-
+log = logging.getLogger(__name__)
 
 '''
 Converts an emails contents to according TheHive contents.
@@ -176,13 +178,11 @@ def searchCaseByBsiCswNr( bsiCswNr ):
 '''
 Setup the module
 '''
-def init(configObj, logObj):
+def init(configObj):
     global config
-    global log
     global theHiveConnector
 
     config = configObj
-    log = logObj
 
-    theHiveConnector = TheHiveConnector(configObj, logObj)
-    mailConverterHelper.init( configObj, logObj )
+    theHiveConnector = TheHiveConnector( configObj )
+    mailConverterHelper.init( configObj )

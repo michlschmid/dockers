@@ -7,7 +7,9 @@ import tempfile
 import re
 import importlib
 import time
+import logging
 
+log = logging.getLogger(__name__)
 
 '''
 Sanitize filenames
@@ -72,8 +74,6 @@ Main handler to
 Return 'TRUE' is successfully processed otherwise 'FALSE'
 '''
 def submitEmailToTheHive(messageObj):
-    global log
-
     # Decode email
     decode = email.header.decode_header(messageObj['From'])[0]
     if decode[1] is not None:
@@ -200,7 +200,7 @@ def submitEmailToTheHive(messageObj):
         import mailConverterDefault as mailConverter
 
     # Start handler and convert email to TheHive
-    mailConverter.init( config, log )
+    mailConverter.init( config )
     return mailConverter.convertMailToTheHive(
         subjectField,
         body,
@@ -214,8 +214,6 @@ def submitEmailToTheHive(messageObj):
 '''
 Setup the module
 '''
-def init(configObj, logObj):
+def init(configObj):
     global config
-    global log
     config = configObj
-    log = logObj
