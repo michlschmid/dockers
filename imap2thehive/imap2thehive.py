@@ -18,6 +18,8 @@ import os,sys
 import tempfile
 import re
 
+import click
+
 import mailFetcher
 
 __author__     = "Xavier Mertens"
@@ -138,11 +140,24 @@ def loadConfig():
         log.error('%s.loadConfig()::Cannot read config file %s: %s' % (__name__, args.configFile, e.errno))
         sys.exit(1)
 
-    logging.config.fileConfig(args.configFile)
 
     if args.verbose:
-        root_logger = logging.getLogger('root')
-        root_logger.setLevel(logging.DEBUG)
+        # Click Fancy Colored
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="".join((
+                click.style("[%(asctime)s]", "yellow"),
+                click.style("[%(levelname)-7s]", "green"),
+                " %(message)s",
+            ))
+        )
+    else:
+        logging.basicConfig(
+            filemode="w",
+            filename="imap2thehive.log",
+            level=logging.INFO,
+            format="[%(asctime)s][%(levelname)s] %(message)s"
+        )
 
     log = logging.getLogger(__name__)
 
