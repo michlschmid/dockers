@@ -139,7 +139,7 @@ def loadConfig():
     try:
         c = configparser.ConfigParser()
         c.read(args.configFile)
-    except OSerror as e:
+    except OSError as e:
         log.error('%s.loadConfig()::Cannot read config file %s: %s' % (__name__, args.configFile, e.errno))
         sys.exit(1)
 

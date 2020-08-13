@@ -147,7 +147,7 @@ def submitEmailToTheHive(messageObj):
                         with os.fdopen(fd, 'w+b') as tmp:
                             tmp.write(part.get_payload(decode=1))
                         attachments.append( path )
-                    except OSerror as e:
+                    except OSError as e:
                         log.error("%s.submitEmailToTheHive()::Cannot dump attachment to %s: %s" % (__name__, path, e.errno))
                         return False
                 else:
@@ -164,7 +164,7 @@ def submitEmailToTheHive(messageObj):
             with os.fdopen(fd, 'w+b') as tmp:
                 tmp.write( messageObj.as_bytes() )
             attachments.append( path )
-        except OSerror as e:
+        except OSError as e:
             log.error("%s.submitEmailToTheHive()::Cannot original email as '*.eml' attachment to %s: %s" % (__name__, path,e.errno))
             return False
 
