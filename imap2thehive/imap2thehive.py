@@ -46,7 +46,6 @@ config = {
     'thehiveApiKey'	 : '',
     'thehiveObservables' : False,
     'thehiveWhitelists'  : None,
-    'mailHandlers'       : {},
     'caseTLP'            : '',
     'caseTags'           : ['email'],
     'caseTasks'          : [],
@@ -193,15 +192,6 @@ def loadConfig():
             config['thehiveObservables'] = True
     if c.has_option('thehive', 'whitelists'):
         config['thehiveWhitelists'] = c.get('thehive', 'whitelists')
-
-    # Custom mail handler config
-    mailHandlerKeywords = c.get('mailhandler', 'keywords').split(',')
-    mailHandlerModuleNames = c.get('mailhandler', 'modulenames').split(',')
-    i = 0
-    for k in mailHandlerKeywords:
-        config['mailHandlers'][ k ] = mailHandlerModuleNames[ i ]
-        i = i + 1
-    log.info('%s.loadConfig()::config[mailHandlers]: %s' % (__name__, config['mailHandlers']))
 
     # Case config
     # Email subject encoding for email to existing case matching:

@@ -5,7 +5,7 @@ import logging
 
 from TheHiveConnector import TheHiveConnector
 
-import mailConverterHelper
+from . import helper
 
 log = logging.getLogger(__name__)
 
@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 Converts an emails contents to according TheHive contents.
 '''
 def convertMailToTheHive(
+        config,
         subject,
         body,
         mdBody,
@@ -21,6 +22,10 @@ def convertMailToTheHive(
         observables,
         attachments
     ):
+
+    theHiveConnector = TheHiveConnector( config )
+    helper.init( config )
+
     log.debug("\n\n%s == convertMailToTheHive() parameter dump ==" % __name__)
     log.debug("%s.convertMailToTheHive()::subject:     %s" % (__name__, subject))
     log.debug("%s.convertMailToTheHive()::body:        %s" % (__name__, body))
@@ -38,6 +43,12 @@ def convertMailToTheHive(
     tasknameCommunication = "Communication"
     tasknameInvestigation = "Investigation"
 
+    '''
+    Test if this email is approriate for this converter.
+    '''
+    # => We are searching for certain keywords in the subject line...
+    if not re.search( "\[CSW_", subject ):
+        return None
 
     """
     Workflow for BSI Emails:
@@ -73,10 +84,10 @@ def convertMailToTheHive(
         taskLogId = theHiveConnector.createTaskLog(communicationTaskId, craftedTaskLog)
 
         # Add Attachments to TaskLog
-        mailConverterHelper.addAttachmentsToTaskLog( communicationTaskId, attachments )
+        helper.addAttachmentsToTaskLog( communicationTaskId, attachments )
 
         # Add Observables to Case
-        mailConverterHelper.addObservablesToCase( esCaseId, observables )
+        helper.addObservablesToCase( esCaseId, observables )
 
     else:
         '''
@@ -126,10 +137,10 @@ def convertMailToTheHive(
             log.info('%s.convertMailToTheHive()::Found communicationTaskId %s' % (__name__, communicationTaskId))
             if communicationTaskId:
                 # Append all "email attachments" as TaskLogs to the Communication task
-                mailConverterHelper.addAttachmentsToTaskLog( communicationTaskId, attachments )
+                helper.addAttachmentsToTaskLog( communicationTaskId, attachments )
 
             # Add all observables found in the mail body to the case
-            mailConverterHelper.addObservablesToCase( esCaseId, observables )
+            helper.addObservablesToCase( esCaseId, observables )
 
         else:
             log.error('%s.convertMailToTheHive()::Could not create case.' % __name__)
@@ -172,17 +183,3 @@ internal esCaseId.
 def searchCaseByBsiCswNr( bsiCswNr ):
     log.info('%s.searchCaseByBsiCswNr()::Got bsiCswNr: %s' % (__name__, bsiCswNr))
     return None
-
-
-
-'''
-Setup the module
-'''
-def init(configObj):
-    global config
-    global theHiveConnector
-
-    config = configObj
-
-    theHiveConnector = TheHiveConnector( configObj )
-    mailConverterHelper.init( configObj )

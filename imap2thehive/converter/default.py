@@ -5,7 +5,7 @@ import logging
 
 from TheHiveConnector import TheHiveConnector
 
-import mailConverterHelper
+from . import helper
 
 log = logging.getLogger(__name__)
 
@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 Converts an emails contents to according TheHive contents.
 '''
 def convertMailToTheHive(
+        config,
         subject,
         body,
         mdBody,
@@ -21,6 +22,9 @@ def convertMailToTheHive(
         observables,
         attachments
     ):
+
+    theHiveConnector = TheHiveConnector( config )
+    helper.init( config )
 
     log.debug("\n\n%s == convertMailToTheHive() parameter dump ==" % __name__)
     log.debug("%s.convertMailToTheHive()::subject:     %s" % (__name__, subject))
@@ -70,10 +74,10 @@ def convertMailToTheHive(
         taskLogId = theHiveConnector.createTaskLog(communicationTaskId, craftedTaskLog)
 
         # Add Attachments to TaskLog
-        mailConverterHelper.addAttachmentsToTaskLog( communicationTaskId, attachments )
+        helper.addAttachmentsToTaskLog( communicationTaskId, attachments )
 
         # Add Observables to Case
-        mailConverterHelper.addObservablesToCase( esCaseId, observables )
+        helper.addObservablesToCase( esCaseId, observables )
 
     else:
         '''
@@ -241,15 +245,3 @@ def convertMailToTheHive(
                 return False
 
     return True
-
-'''
-Setup the module
-'''
-def init(configObj):
-    global config
-    global theHiveConnector
-
-    config = configObj
-
-    theHiveConnector = TheHiveConnector( configObj )
-    mailConverterHelper.init( configObj )

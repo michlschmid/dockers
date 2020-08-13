@@ -9,6 +9,8 @@ import importlib
 import time
 import logging
 
+import converter
+
 log = logging.getLogger(__name__)
 
 '''
@@ -183,33 +185,22 @@ def submitEmailToTheHive(messageObj):
     log.info("%s.submitEmailToTheHive()::Removed duplicate observables: %d -> %d" % (__name__, len(observables), len(new_observables)))
     observables = new_observables
 
-    # Apply custom email handling
-    # Search for interesting keywords in subjectField for decision making whether to apply a custom converter workflow:
-    customHandlerFlag = False
-    for key in config['mailHandlers'].keys():
-        log.debug("%s.submitEmailToTheHive()::Searching for mailhandler '%s' in subject:'%s'" % (__name__, key, subjectField))
-
-        if (customHandlerFlag == False) and re.search( key, subjectField, flags=0 ):
-            moduleName = config['mailHandlers'][ key ]
-            log.debug("%s.submitEmailToTheHive()::Loading custom mailhandler module '%s'" % (__name__, moduleName))
-            customHandlerFlag = True
-            mailConverter = importlib.import_module( moduleName )
-
-    # Use "default" handler if no specific handler was found
-    if customHandlerFlag == False:
-        import mailConverterDefault as mailConverter
-
-    # Start handler and convert email to TheHive
-    mailConverter.init( config )
-    return mailConverter.convertMailToTheHive(
-        subjectField,
-        body,
-        mdBody,
-        emailDate,
-        fromField,
-        observables,
-        attachments
-    )
+    '''
+    Convert email into TheHive data with the first (1st) matching converter...
+    '''
+    for conv in converter.CONVERTERS:
+        result = conv(
+            config,
+            subjectField,
+            body,
+            mdBody,
+            emailDate,
+            fromField,
+            observables,
+            attachments
+        )
+        if result is not None:
+            return result
 
 '''
 Setup the module
