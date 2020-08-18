@@ -26,6 +26,19 @@ def convertMailToTheHive(
     theHiveConnector = TheHiveConnector( config )
     helper.init( config )
 
+    tasknameCommunication = "Communication"
+    tasknameInvestigation = "Investigation"
+
+    '''
+    Test if this email is approriate for this converter.
+    '''
+    # => We are searching for certain keywords in the subject line...
+    if not re.search( "\[CSW_", subject ):
+        return None
+
+    '''
+    YES - we're responsible for handling this message! ;-)
+    '''
     log.debug("\n\n%s == convertMailToTheHive() parameter dump ==" % __name__)
     log.debug("%s.convertMailToTheHive()::subject:     %s" % (__name__, subject))
     log.debug("%s.convertMailToTheHive()::body:        %s" % (__name__, body))
@@ -40,15 +53,6 @@ def convertMailToTheHive(
         log.debug("{0}.convertMailToTheHive()::attachment[{1}]: {2}".format(__name__, i, attachments[i]) )
     log.debug("%s == convertMailToTheHive() parameter dump ==\n\n" % __name__)
 
-    tasknameCommunication = "Communication"
-    tasknameInvestigation = "Investigation"
-
-    '''
-    Test if this email is approriate for this converter.
-    '''
-    # => We are searching for certain keywords in the subject line...
-    if not re.search( "\[CSW_", subject ):
-        return None
 
     """
     Workflow for BSI Emails:
