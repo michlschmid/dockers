@@ -115,11 +115,13 @@ def submitEmailToTheHive(messageObj):
     for part in messageObj.walk():
         if part.get_content_type() == "text/plain" and part.get_content_disposition() != "attachment":
             try:
-                body    = body + "\nMessage Part " + str(i) + ":\nContent-Type: " + part.get_content_type() + "\n" + part.get_payload(decode=True).decode()
-                mdBody  = mdBody + "\nMessage Part " + str(i) + ":\nContent-Type: `" + part.get_content_type() + "`:\n```\n" + part.get_payload(decode=True).decode() + "\n```"
+                content = part.get_payload(decode=True).decode()
             except UnicodeDecodeError:
-                body = part.get_payload(decode=True).decode('ISO-8859-1')
-                mdBody = mdBody + "```" + part.get_payload(decode=True).decode('ISO-8859-1') + "```"
+                content = part.get_payload(decode=True).decode('ISO-8859-1')
+
+            body    = body + "\nMessage Part " + str(i) + ":\nContent-Type: " + part.get_content_type() + "\n" + content
+            mdBody  = mdBody + "\n----\nMessage Part " + str(i) + ":\nContent-Type: `" + part.get_content_type() + "`:\n```\n" + content + "\n```"
+
             observables.extend( searchObservables(body, observables) )
 
         elif part.get_content_type() == "text/html":
